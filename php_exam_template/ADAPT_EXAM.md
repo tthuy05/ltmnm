@@ -1,260 +1,201 @@
 # ADAPT EXAM — ĐỔI TEMPLATE THEO ĐỀ THI
 
-Tài liệu này là checklist thao tác. Chỉ giữ chức năng đề yêu cầu.
+Mục tiêu là đổi đúng entity, field, kiểu dữ liệu và chức năng được chấm. Không thay tên máy móc rồi giữ validation sai kiểu.
 
-## 1. Cách đọc đề
-
-Gạch chân đúng 5 thứ:
+## 1. Gạch chân 5 thứ trong đề
 
 ```text
 1. Chủ thể chính là gì?
-2. Các thuộc tính là gì?
+2. Thuộc tính và kiểu dữ liệu là gì?
 3. Có bao nhiêu bảng?
-4. Có quan hệ giữa các bảng không?
-5. Đề yêu cầu chức năng gì?
+4. Primary Key / Foreign Key nằm đâu?
+5. Đề yêu cầu chức năng nào?
 ```
 
-Ví dụ đề: “Xây dựng website quản lý sinh viên. Mỗi sinh viên có mã sinh viên, họ tên, email, lớp. Cho phép thêm, sửa, xóa, tìm kiếm.”
-
-Phân tích:
+Ví dụ “Quản lý sinh viên: mã, họ tên, email, lớp; thêm/sửa/xóa/tìm kiếm”:
 
 ```text
-Entity:  Student
-Table:   students
-Fields:  student_id, name, email, class_name
-Feature: CRUD, Search
-Số bảng: 1
+Entity: Student
+Table: students
+Fields: student_id INT, name VARCHAR, email VARCHAR, class_name VARCHAR
+Tables: 1
+Features: CRUD + Search
 ```
 
-Không có bảng liên quan nên bỏ Category, Foreign Key và JOIN.
+Không có bảng liên quan thì đặt `category=false`; không có ảnh thì đặt `upload=false`.
 
-## 2. Bảng đổi chủ đề
+## 2. Quy trình 10 phút đầu
 
-| Shop | Sinh viên | Sách | Nhân viên |
+```text
+BƯỚC 1  Viết entity và tên bảng.
+BƯỚC 2  Viết từng field cùng kiểu SQL.
+BƯỚC 3  Đánh dấu PK, AUTO_INCREMENT, UNIQUE, NOT NULL.
+BƯỚC 4  Vẽ quan hệ và FK nếu có nhiều bảng.
+BƯỚC 5  Tick feature checklist.
+BƯỚC 6  Copy project sang thư mục đề mới; giữ bản gốc.
+BƯỚC 7  Sửa SQL rồi import vào database mới.
+BƯỚC 8  Sửa helper + form + INSERT/UPDATE.
+BƯỚC 9  Sửa List/View/Search/JOIN/API.
+BƯỚC 10 Test Add → View → Edit → Delete và xóa tên chủ đề cũ.
+```
+
+Feature checklist:
+
+```text
+[ ] CRUD             [ ] Search          [ ] Pagination
+[ ] Category/JOIN    [ ] Upload          [ ] Login/Session/Cookie
+[ ] JavaScript       [ ] AJAX/JSON       [ ] OOP
+[ ] GROUP BY         [ ] Orders/chi tiết
+```
+
+## 3. Chuỗi file phải sửa khi đổi field
+
+```text
+sql/database.sql
+    ↓
+includes/product_helpers.php   read_product_input + validation
+    ↓
+includes/product_form.php      label + input
+    ↓
+product_add.php                INSERT
+product_edit.php               SELECT cũ + UPDATE
+    ↓
+products.php                   SELECT + table + search
+product_view.php               SELECT + detail
+    ↓
+api/*                          nếu giữ AJAX
+```
+
+Nếu đổi tên `products.php` thành `students.php`, sửa luôn link, redirect và đường dẫn trong các file liên quan.
+
+## 4. Kiểu dữ liệu phải đi cùng input và validation
+
+| Dữ liệu | SQL | HTML thường dùng | PHP kiểm tra |
 |---|---|---|---|
-| Product | Student | Book | Employee |
-| `products` | `students` | `books` | `employees` |
-| `product_id` | `student_id` | `book_id` | `employee_id` |
-| `name` | `name` | `title` | `name` |
-| `price` | `score` hoặc `birthday` | `price` | `salary` |
-| Category | Class | Category | Department |
+| Tên ngắn | `VARCHAR(150)` | `text`, `maxlength` | không rỗng, giới hạn độ dài |
+| Email | `VARCHAR(150) UNIQUE` | `email` | `filter_var(..., FILTER_VALIDATE_EMAIL)` |
+| Số lượng | `INT` | `number step=1` | số nguyên, min/max |
+| Giá/lương | `DECIMAL(12,2)` | `number step=0.01` | chuỗi số, tối đa 2 số lẻ |
+| Ngày sinh | `DATE` | `date` | kiểm tra định dạng/ngày hợp lệ |
+| Mô tả | `TEXT` | `textarea` | giới hạn độ dài nếu cần |
+| Khóa ngoại | `INT` | `select` | ID dương và tồn tại trong bảng cha |
+| Ảnh | `VARCHAR(255)` | `file` | size, phần mở rộng, nội dung ảnh |
 
-Code CRUD về bản chất không đổi. Chủ yếu đổi:
+Không đổi `price` thành `birthday` rồi giữ `type="number"` và validation giá. Đây là lỗi đổi đề phổ biến nhất.
 
-```text
-Tên bảng
-Tên field
-Label trên form
-Tên biến
-JOIN
+## 5. Các bản cấu hình nhanh
+
+### Chỉ CRUD một bảng
+
+Trong `config/features.php`:
+
+```php
+'search' => false,
+'pagination' => false,
+'category' => false,
+'upload' => false,
 ```
 
-## 3. Quy trình 10 phút đầu khi nhận đề
+Giữ `config/`, `includes/`, List/Add/Edit/View/Delete, CSS và SQL một bảng. `auth/`, `api/`, `classes/`, demo JavaScript có thể bỏ.
 
-```text
-BƯỚC 1   Xác định entity.
-BƯỚC 2   Xác định field.
-BƯỚC 3   Xác định số bảng.
-BƯỚC 4   Xác định Primary Key / Foreign Key.
-BƯỚC 5   Tick feature checklist.
-BƯỚC 6   Import rồi sửa database.sql.
-BƯỚC 7   Sửa SELECT và tên bảng.
-BƯỚC 8   Sửa form Add/Edit.
-BƯỚC 9   Sửa INSERT/UPDATE và biến $_POST.
-BƯỚC 10  Xóa feature đề không yêu cầu, rồi test CRUD.
-```
+### CRUD + Search
 
-## 4. Feature checklist
+Đặt Search `true`, ba feature còn lại theo đề. Query dùng prepared `LIKE :keyword`.
 
-```text
-[ ] CRUD
-[ ] Search
-[ ] Pagination
-[ ] Login
-[ ] Session
-[ ] Cookie
-[ ] Upload
-[ ] OOP
-[ ] JavaScript
-[ ] AJAX
-[ ] JOIN
-[ ] GROUP BY
-```
+### CRUD + Search + Pagination
 
-Chỉ giữ mục đề yêu cầu. Đừng thêm chức năng để “cho đẹp” nếu đề không chấm.
+Đặt Search và Pagination `true`. Giữ từ khóa khi tạo URL số trang. Đây là bản nên ôn kỹ nhất.
 
-## 5. Các cấu hình nhanh
+### Hai bảng 1–N
 
-### Bản tối giản khi đề chỉ yêu cầu CRUD
+Đặt Category `true`, nhưng có thể đổi ý nghĩa thành Class, Department hoặc Book Category. Sửa đồng bộ tên bảng, FK, JOIN, `<select>` và câu kiểm tra FK.
 
-Chỉ cần:
+## 6. Bỏ từng feature
 
-```text
-config/database.php
-index.php        <- copy products.php rồi đổi tên, bỏ Search/Pagination/Category/Upload
-add.php          <- copy product_add.php rồi bỏ Category/Upload
-edit.php         <- copy product_edit.php rồi bỏ Category/Upload
-delete.php       <- copy product_delete.php
-database.sql     <- chỉ giữ một bảng chính
-```
+### Search / Pagination
 
-Không có Login, Cookie, Upload, OOP, AJAX, Search, Pagination.
+Đổi feature tương ứng thành `false` và test. Nếu đề yêu cầu code ngắn nhất, sau đó xóa các block comment `OPTIONAL: SEARCH` hoặc `OPTIONAL: PAGINATION` trong `products.php`.
 
-### Bản CRUD + Search
+### Category
 
-Giữ PDO, 4 thao tác CRUD và khối `OPTIONAL FEATURE: SEARCH`. Bỏ Pagination, Login, Upload, AJAX; đổi query danh sách thành SELECT không có `LIMIT/OFFSET`.
+1. Đặt `category=false`.
+2. Test toàn bộ CRUD.
+3. Bỏ cột FK, constraint và bảng Category khỏi SQL.
+4. Bỏ `categories.php` và link menu nếu nộp bản gọn.
 
-### Bản CRUD + Search + Pagination
+### Upload
 
-Giữ PDO, CRUD, Search, Pagination. Đây là bản ưu tiên để ôn. Khi bấm trang 2 phải giữ `keyword` trên URL.
+1. Đặt `upload=false`.
+2. Test CRUD.
+3. Bỏ cột `image` khỏi SQL.
+4. Có thể bỏ phần upload helper và thư mục `uploads` nếu đề không cần.
 
-### Bản 2 bảng
+### Login / Cookie
 
-Giữ `categories` + `products`, Primary Key, Foreign Key, JOIN, CRUD, Search và Pagination. Form Add/Edit có `<select name="category_id">`.
+Xóa hoặc không dùng `auth/`; CRUD không phụ thuộc login. Nếu đề yêu cầu bảo vệ trang, thêm `session_start()` và kiểm tra session trước HTML.
 
-## 6. Cách bỏ từng feature
+### AJAX / JavaScript / OOP
 
-### Bỏ Search
+- AJAX: bỏ `ajax_demo.php`, `api/` và link menu.
+- JavaScript: bỏ hai trang demo; xóa không ảnh hưởng xác nhận Delete vì Delete có trang POST riêng.
+- OOP: bỏ `classes/`; CRUD procedural PDO vẫn chạy.
 
-1. Xóa form `<form class="search-form" method="get">` trong `products.php`.
-2. Xóa `$keyword = ...`.
-3. Xóa hai khối `if ($keyword !== '')` khỏi câu COUNT và SELECT.
-4. Xóa `bindValue(':keyword', ...)`.
-5. Nếu còn Pagination, tạo URL trang chỉ với `page`.
+## 7. Ví dụ A — Shop → Sinh viên một bảng
 
-Đổi từ:
+Schema:
 
 ```sql
-SELECT * FROM products WHERE name LIKE :keyword
+CREATE TABLE students (
+    student_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(150) NOT NULL,
+    email VARCHAR(150) NOT NULL UNIQUE,
+    phone VARCHAR(20),
+    birthday DATE
+);
 ```
 
-thành:
-
-```sql
-SELECT * FROM products
-```
-
-### Bỏ Pagination
-
-1. Bỏ `$limit`, `$page`, `$offset`, `$totalRecords`, `$totalPages` và câu COUNT.
-2. Bỏ `LIMIT :limit OFFSET :offset`.
-3. Bỏ hai `bindValue` cho `:limit`, `:offset`.
-4. Bỏ HTML `<nav class="pagination">` và dòng tổng.
-5. Giữ Search nếu đề vẫn yêu cầu.
-
-### Bỏ Login / Session
-
-1. Không dùng thư mục `auth/`.
-2. Không thêm `session_start()` hay đoạn kiểm tra `$_SESSION` vào CRUD.
-3. Truy cập thẳng `products.php`.
-
-CRUD hiện tại vốn không phụ thuộc Login.
-
-### Bỏ Cookie
-
-Xóa `setcookie(...)`, `$_COOKIE['last_user']` và checkbox “Ghi nhớ”. Session login vẫn hoạt động.
-
-### Bỏ Upload
-
-1. Bỏ cột `image` trong `database.sql`.
-2. Bỏ `enctype="multipart/form-data"`.
-3. Bỏ `<input type="file" name="image">`.
-4. Bỏ khối `$_FILES`, `move_uploaded_file()`.
-5. Bỏ `image` khỏi INSERT/UPDATE và mảng `execute`.
-6. Bỏ cột Ảnh trong List và thẻ `<img>` trong View/Edit.
-
-Sau khi xóa, INSERT cơ bản là:
-
-```sql
-INSERT INTO products (name, price, quantity, category_id)
-VALUES (?, ?, ?, ?)
-```
-
-### Bỏ Category / chuyển về một bảng
-
-1. Bỏ bảng `categories` và Foreign Key trong SQL.
-2. Bỏ cột `category_id` khỏi bảng chính.
-3. Bỏ query lấy `$categories` trong Add/Edit.
-4. Bỏ `<select name="category_id">`.
-5. Bỏ `category_id` khỏi INSERT/UPDATE.
-6. Bỏ tên danh mục khỏi table HTML.
-
-Đổi:
-
-```sql
-SELECT p.*, c.category_name
-FROM products AS p
-LEFT JOIN categories AS c ON p.category_id = c.category_id
-```
-
-thành:
-
-```sql
-SELECT * FROM products
-```
-
-### Bỏ AJAX
-
-Xóa `api/`, `ajax_demo.php` và link AJAX trên menu. Giữ form GET, form POST và PHP render HTML. CRUD không gọi API nên vẫn chạy.
-
-### Bỏ OOP
-
-Không dùng thư mục `classes/`. CRUD đang dùng procedural PDO, không cần sửa gì khác.
-
-### Bỏ JavaScript
-
-Xóa `javascript_demo.php`, `ajax_demo.php`, `api/` và link menu. Có thể bỏ `onclick="return confirm(...)"`; CRUD PHP vẫn chạy.
-
-## 7. Ví dụ A — Shop → Sinh viên
-
-Đề mẫu:
+Đổi file/biến:
 
 ```text
-students: student_id, name, email, phone, birthday
-Feature: CRUD, Search
+products.php       → students.php
+product_add.php    → student_add.php
+product_edit.php   → student_edit.php
+product_view.php   → student_view.php
+product_delete.php → student_delete.php
+product_id         → student_id
 ```
 
-| Cần đổi | Từ | Thành |
-|---|---|---|
-| Table | `products` | `students` |
-| ID | `product_id` | `student_id` |
-| Tên | `name` | `name` |
-| Giá | `price` | `birthday` |
-| Số lượng | `quantity` | `phone` |
-| File list | `products.php` | `students.php` |
-| File add | `product_add.php` | `student_add.php` |
-| File edit | `product_edit.php` | `student_edit.php` |
-| File delete | `product_delete.php` | `student_delete.php` |
+Form: text Name, email Email, tel Phone, date Birthday. Helper dùng `FILTER_VALIDATE_EMAIL`; không dùng validation giá/số lượng. INSERT/UPDATE liệt kê bốn field mới. Search theo `name` hoặc `email`. Giữ CRUD + Search; tắt Category/Upload, thường tắt Pagination nếu đề không hỏi.
 
-SQL chính:
+## 8. Ví dụ B — Shop → Sách + Thể loại
 
 ```sql
-SELECT * FROM students ORDER BY student_id DESC;
+CREATE TABLE categories (
+    category_id INT AUTO_INCREMENT PRIMARY KEY,
+    category_name VARCHAR(100) NOT NULL UNIQUE
+);
 
-INSERT INTO students (name, email, phone, birthday)
-VALUES (?, ?, ?, ?);
-
-UPDATE students
-SET name = ?, email = ?, phone = ?, birthday = ?
-WHERE student_id = ?;
+CREATE TABLE books (
+    book_id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(200) NOT NULL,
+    author VARCHAR(150) NOT NULL,
+    price DECIMAL(12,2) NOT NULL,
+    category_id INT,
+    FOREIGN KEY (category_id) REFERENCES categories(category_id)
+);
 ```
 
-Form đổi label thành Họ tên, Email, Điện thoại, Ngày sinh. Search dùng `WHERE name LIKE :keyword`. Bỏ Category/JOIN, Upload, Login, AJAX và Pagination nếu đề không yêu cầu. Giữ CRUD + Search.
-
-## 8. Ví dụ B — Shop → Sách / Thư viện
+Mapping:
 
 ```text
-categories: category_id, category_name
-books: book_id, title, author, price, category_id
-Feature: CRUD, Search, JOIN
+Product/products/product_id/name
+→ Book/books/book_id/title
+quantity → author (đổi sang text và validation chuỗi)
+price → price
+Category giữ nguyên ý nghĩa thể loại
 ```
 
-- `Product` → `Book`, `products` → `books`, `product_id` → `book_id`.
-- `name` → `title`, `quantity` → `author`; giữ `price`, `category_id`.
-- Đổi file thành `books.php`, `book_add.php`, `book_edit.php`, `book_delete.php`, `book_view.php`.
-- Form có Title, Author, Price, Category.
-
-JOIN mới:
+JOIN:
 
 ```sql
 SELECT b.*, c.category_name
@@ -262,97 +203,87 @@ FROM books AS b
 LEFT JOIN categories AS c ON b.category_id = c.category_id;
 ```
 
-Search đổi thành `WHERE b.title LIKE :keyword`. Giữ Category, JOIN, CRUD, Search; bỏ Login/AJAX/Upload nếu đề không yêu cầu.
+Form: Title, Author, Price, Category. Search theo `b.title`. Giữ CRUD, Search, Category/JOIN; Upload/Pagination theo đề.
 
-## 9. Ví dụ C — Shop → Nhân viên + Phòng ban
+## 9. Ví dụ C — Nhân viên + Phòng ban
 
-```text
-departments: department_id, department_name
-employees: employee_id, name, salary, department_id
-Feature: CRUD, JOIN, Pagination
+```sql
+CREATE TABLE departments (
+    department_id INT AUTO_INCREMENT PRIMARY KEY,
+    department_name VARCHAR(100) NOT NULL UNIQUE
+);
+
+CREATE TABLE employees (
+    employee_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(150) NOT NULL,
+    salary DECIMAL(12,2) NOT NULL,
+    department_id INT,
+    FOREIGN KEY (department_id) REFERENCES departments(department_id)
+);
 ```
 
-- `categories` → `departments`; `category_id` → `department_id`; `category_name` → `department_name`.
-- `products` → `employees`; `product_id` → `employee_id`; `price` → `salary`.
-- Bỏ `quantity`, `image`; thêm field nếu đề yêu cầu như `email` hoặc `position`.
-- File: `employees.php`, `employee_add.php`, `employee_edit.php`, `employee_delete.php`.
-- Form: Name, Salary, Department `<select>`.
-
-JOIN:
+Mapping Category → Department và Product → Employee. Form có Name, Salary, Department. Bỏ Quantity/Image. Validation Salary giống Price. JOIN:
 
 ```sql
 SELECT e.*, d.department_name
 FROM employees AS e
-JOIN departments AS d ON e.department_id = d.department_id;
+LEFT JOIN departments AS d ON e.department_id = d.department_id;
 ```
 
-Giữ CRUD, JOIN, Pagination. Chỉ giữ Search nếu đề có từ “tìm kiếm”. Bỏ Upload và Category cũ; thay toàn bộ bằng Department.
+Giữ CRUD, JOIN và Pagination nếu đề yêu cầu nhiều bản ghi. Sửa tên function/biến để không còn `$product` trong bài Employee.
 
-## 10. Ví dụ D — Shop → Món ăn + Danh mục món
-
-```text
-food_categories: category_id, category_name
-foods: food_id, food_name, price, description, category_id
-Feature: CRUD, Search, Upload, JOIN
-```
-
-- `categories` → `food_categories`; `products` → `foods`.
-- `product_id` → `food_id`; `name` → `food_name`; giữ `price`, `category_id`, `image`.
-- `quantity` → `description` và đổi input số thành `<textarea name="description">`.
-- File: `foods.php`, `food_add.php`, `food_edit.php`, `food_delete.php`, `food_view.php`.
-
-SQL list:
+## 10. Ví dụ D — Món ăn + Danh mục món
 
 ```sql
-SELECT f.*, c.category_name
-FROM foods AS f
-LEFT JOIN food_categories AS c ON f.category_id = c.category_id
-WHERE f.food_name LIKE :keyword;
+CREATE TABLE food_categories (
+    category_id INT AUTO_INCREMENT PRIMARY KEY,
+    category_name VARCHAR(100) NOT NULL UNIQUE
+);
+
+CREATE TABLE foods (
+    food_id INT AUTO_INCREMENT PRIMARY KEY,
+    food_name VARCHAR(150) NOT NULL,
+    price DECIMAL(12,2) NOT NULL,
+    description TEXT,
+    category_id INT,
+    image VARCHAR(255),
+    FOREIGN KEY (category_id) REFERENCES food_categories(category_id)
+);
 ```
 
-Form giữ upload ảnh món và select danh mục. Giữ CRUD, Search, Upload, JOIN; bỏ Login, OOP, AJAX, Pagination nếu đề không yêu cầu.
+Đổi Product → Food, `name` → `food_name`, `quantity` → `description`. `description` phải dùng textarea và validation chuỗi. Giữ Price, Category và Upload. Search theo tên món. API phải đổi field JSON nếu AJAX còn được chấm.
 
-## 11. Kiểm tra khi đổi sang đề một bảng
+## 11. Kiểm tra tính độc lập
 
-Nếu đề chỉ có `students`, cần thấy những thứ sau đã biến mất:
+Sau mỗi lần bỏ feature:
 
 ```text
-categories
-category_id
-FOREIGN KEY
-JOIN
-<select>
+[ ] Search off: danh sách vẫn chạy, keyword không lọc
+[ ] Pagination off: hiện đủ bản ghi
+[ ] Category off: CRUD chạy dù không còn categories/category_id
+[ ] Upload off: CRUD chạy dù không còn image
+[ ] Bỏ auth: CRUD truy cập trực tiếp
+[ ] Bỏ API/JS/OOP: CRUD PHP vẫn chạy
 ```
 
-Cần giữ:
+Repository có `tests/regression.php` chạy các biến thể này trên database tạm. Trong phòng thi, test thủ công vẫn là bước bắt buộc.
+
+## 12. Checklist trước khi nộp
 
 ```text
-PDO
-Prepared Statement
-CRUD
-Search/Pagination nếu đề yêu cầu
+[ ] Database và table đúng tên đề
+[ ] Field đúng tên và đúng kiểu
+[ ] PK/AUTO_INCREMENT đúng
+[ ] FK/JOIN đúng nếu có hai bảng
+[ ] PDO kết nối được trên máy nộp
+[ ] GET/POST đưa vào SQL bằng Prepared Statement
+[ ] Form input khớp kiểu dữ liệu
+[ ] SELECT / INSERT / UPDATE / DELETE đều chạy
+[ ] GET Delete không tự xóa; POST xác nhận mới xóa
+[ ] Search/Pagination chạy nếu đề yêu cầu
+[ ] Upload kiểm tra được nếu đề yêu cầu
+[ ] Không còn tên Product/field SQL cũ
+[ ] Feature không được yêu cầu đã tắt hoặc bỏ
+[ ] setup.php không báo lỗi module đang dùng
+[ ] Import SQL vào database trống chạy được
 ```
-
-## 12. Checklist trước khi nộp bài
-
-```text
-[ ] Database đúng tên
-[ ] Table đúng field
-[ ] Primary Key đúng
-[ ] Foreign Key đúng nếu có
-[ ] PDO kết nối được
-[ ] SELECT chạy
-[ ] INSERT chạy
-[ ] UPDATE chạy
-[ ] DELETE chạy
-[ ] Dữ liệu GET/POST đưa vào SQL bằng Prepared Statement
-[ ] Form field đúng
-[ ] Search chạy nếu đề yêu cầu
-[ ] Pagination chạy nếu đề yêu cầu
-[ ] JOIN đúng nếu có 2 bảng
-[ ] Không còn code chức năng đề không yêu cầu
-[ ] Không còn tên Product nếu đề là Student/Book/Employee
-[ ] Không còn SQL dùng field cũ
-[ ] Test lại toàn bộ trước khi nộp
-```
-

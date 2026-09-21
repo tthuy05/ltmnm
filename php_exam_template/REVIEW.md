@@ -10,13 +10,14 @@
 | `$_SESSION['user']` | Lưu dữ liệu theo phiên |
 | `$_COOKIE['last_user']` | Đọc Cookie |
 | `header('Location: ...')` | Chuyển trang; luôn gọi `exit` sau đó |
-| `htmlspecialchars($value)` | Hiển thị dữ liệu an toàn trong HTML |
+| `e($value)` | Helper gọi `htmlspecialchars` để hiển thị HTML an toàn |
+| `input_text($_POST, 'name')` | Chỉ nhận chuỗi, tránh lỗi khi input bị gửi thành mảng |
 
 Luồng form thường dùng:
 
 ```php
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $name = trim($_POST['name'] ?? '');
+    $name = input_text($_POST, 'name');
 }
 ```
 
@@ -103,5 +104,6 @@ fetch('api/search_products.php?keyword=laptop')
 2. Quên `enctype="multipart/form-data"` khi upload.
 3. Số dấu `?` không khớp số phần tử trong `execute([...])`.
 4. Gọi `header()` sau khi đã in HTML.
-5. Đổi tên field trong form nhưng quên đổi SQL hoặc `$_POST`.
+5. Đổi tên field trong form nhưng quên đổi helper, SQL, List/View hoặc API.
 
+Delete nên dùng GET để hiện trang xác nhận và POST để thực hiện `DELETE`; không xóa dữ liệu ngay khi người dùng mở một URL.

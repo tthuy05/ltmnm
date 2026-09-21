@@ -1,0 +1,12 @@
+# Git tự đổi newline phù hợp khi checkout trên Windows/macOS/Linux.
+* text=auto
+*.php text eol=lf
+*.sql text eol=lf
+*.md text eol=lf
+*.css text eol=lf
+*.js text eol=lf
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary

@@ -1,0 +1,14 @@
+# Cấu hình riêng và ảnh người dùng trên từng máy
+/php_exam_template/config/local.php
+/php_exam_template/uploads/*
+!/php_exam_template/uploads/.gitkeep
+!/php_exam_template/uploads/.htaccess
+
+# File tạm của hệ điều hành và IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vs/
+.vscode/
+*.user
+*.log

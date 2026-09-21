@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/config/features.php';
+require_once __DIR__ . '/includes/functions.php';
 $pageTitle = 'Trang chủ';
 ?>
 <!DOCTYPE html>
@@ -6,7 +8,7 @@ $pageTitle = 'Trang chủ';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($pageTitle) ?> - PHP Exam Template</title>
+    <title><?= e($pageTitle) ?> - PHP Exam Template</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -15,10 +17,11 @@ $pageTitle = 'Trang chủ';
         <a class="brand" href="index.php">PHP Exam Template</a>
         <nav class="nav" aria-label="Menu chính">
             <a href="products.php">Sản phẩm</a>
-            <a href="categories.php">Danh mục</a>
+            <?php if ($features['category']): ?><a href="categories.php">Danh mục</a><?php endif; ?>
             <a href="javascript_demo.php">JavaScript</a>
             <a href="ajax_demo.php">AJAX</a>
             <a href="auth/login.php">Đăng nhập</a>
+            <a href="setup.php">Kiểm tra cài đặt</a>
         </nav>
     </div>
 </header>
@@ -41,12 +44,12 @@ $pageTitle = 'Trang chủ';
             <p>SELECT, INSERT, UPDATE, DELETE bằng prepared statement.</p>
             <a href="products.php">Xem CRUD →</a>
         </article>
-        <article class="card">
+        <?php if ($features['category']): ?><article class="card">
             <span class="card-number">02</span>
             <h2>Category + JOIN</h2>
             <p>Quan hệ 1–N giữa danh mục và sản phẩm.</p>
             <a href="categories.php">Xem danh mục →</a>
-        </article>
+        </article><?php endif; ?>
         <article class="card">
             <span class="card-number">03</span>
             <h2>JavaScript DOM</h2>
@@ -63,4 +66,3 @@ $pageTitle = 'Trang chủ';
 </main>
 </body>
 </html>
-

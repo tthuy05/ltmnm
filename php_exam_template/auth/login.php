@@ -5,6 +5,7 @@
 // Bỏ toàn bộ thư mục auth nếu đề không yêu cầu đăng nhập.
 // ===============================
 session_start();
+require_once __DIR__ . '/../includes/functions.php';
 
 // Nếu đề yêu cầu bảo vệ trang CRUD, copy đoạn sau lên đầu trang đó
 // và sửa đường dẫn cho đúng vị trí file:
@@ -19,11 +20,11 @@ if (!empty($_SESSION['user'])) {
 }
 
 $error = '';
-$savedUsername = $_COOKIE['last_user'] ?? '';
+$savedUsername = input_text($_COOKIE, 'last_user');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username = trim($_POST['username'] ?? '');
-    $password = $_POST['password'] ?? '';
+    $username = input_text($_POST, 'username');
+    $password = input_text($_POST, 'password');
 
     if ($username === 'admin' && $password === '123') {
         session_regenerate_id(true);
@@ -69,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <form class="form-card" method="post">
         <div class="form-group">
             <label for="username">Username</label>
-            <input id="username" name="username" type="text" value="<?= htmlspecialchars($savedUsername) ?>" autocomplete="username" required>
+            <input id="username" name="username" type="text" value="<?= e($savedUsername) ?>" autocomplete="username" required>
         </div>
         <div class="form-group">
             <label for="password">Password</label>
